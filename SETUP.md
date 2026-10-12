@@ -1,5 +1,9 @@
 # Mass Outreach — invite-only release
 
+For the first **Streamlit Community Cloud** launch, follow
+[STREAMLIT_LAUNCH.md](STREAMLIT_LAUNCH.md). Repository: tui6867/mass-outreach-branch;
+branch main; app.py; select Python 3.12. The official host supports uv.lock directly.
+
 ## Local checks (no live sending)
 Supported Python: 3.11–3.13; development/CI uses 3.12. Install uv, then:
 ```
@@ -25,10 +29,14 @@ Use a Streamlit-compatible host supporting Python and uv. Build:
 `uv sync --locked --no-dev`. Start:
 `uv run --no-sync streamlit run app.py --server.address 0.0.0.0 --server.port <HOST_PORT>`.
 Do not run patch_streamlit_html.py; installed packages are never mutated.
-Hosts that insist on requirements.txt must be configured for a custom uv build;
-there is intentionally one authoritative pyproject/uv.lock dependency definition.
+Community Cloud installs the existing uv.lock directly; no custom build or
+requirements.txt is needed. Other hosts that require requirements.txt need a
+separately reviewed build configuration. Keep pyproject/uv.lock authoritative.
 Configure environment variables through the host's secret store; .env.example
 lists names only, not a directly loadable dotenv file. The app does not load .env.
+For Community Cloud, paste the filled `.streamlit/secrets.toml.example` template
+into Cloud Secrets. The app reads `st.secrets`, supports TOML booleans/integers
+and honors explicit environment overrides. Never commit the real secrets.toml.
 
 ## Supabase database / access
 Apply `supabase/migrations/202610110001_invite_outreach.sql` through an operator's

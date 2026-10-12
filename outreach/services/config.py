@@ -30,7 +30,10 @@ class Config:
             return value
 
         def positive(name):
-            value = int(required(name))
+            try:
+                value = int(required(name))
+            except ValueError as exc:
+                raise ValueError(f"{name} must be a positive integer") from exc
             if value <= 0:
                 raise ValueError(f"{name} must be positive")
             return value
@@ -38,6 +41,16 @@ class Config:
         url, redirect = required("SUPABASE_URL"), required("AUTH_REDIRECT_URL")
         if any(urlsplit(u).scheme != "https" or not urlsplit(u).hostname for u in (url, redirect)):
             raise ValueError("Supabase and authentication redirect URLs must use HTTPS")
+        if any(
+            urlsplit(u).username
+            or urlsplit(u).password
+            or urlsplit(u).query
+            or urlsplit(u).fragment
+            for u in (url, redirect)
+        ):
+            raise ValueError(
+                "Supabase and authentication redirect URLs cannot include credentials, query or fragment"
+            )
         if required("SENDER_DOMAIN_VERIFIED").lower() != "true":
             raise ValueError("Operator must verify the sender domain before enabling the app")
         return cls(

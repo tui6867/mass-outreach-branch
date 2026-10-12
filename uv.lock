@@ -415,7 +415,7 @@ requires-dist = [
     { name = "email-validator", specifier = ">=2.2,<3" },
     { name = "httpx", specifier = ">=0.28,<1" },
     { name = "markdown", specifier = ">=3.7,<4" },
-    { name = "streamlit", specifier = ">=1.40,<2" },
+    { name = "streamlit", specifier = ">=1.65,<2" },
 ]
 
 [package.metadata.requires-dev]

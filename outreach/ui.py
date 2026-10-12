@@ -6,6 +6,7 @@ import httpx
 import streamlit as st
 
 import legal
+from outreach.connections import get_api
 from outreach.domain.batches import attachment, prepare, restore
 from outreach.domain.recipients import (
     PATTERNS,
@@ -20,29 +21,46 @@ from outreach.services.config import Config
 from outreach.services.exports import send_log
 from outreach.services.sending import start, step
 from outreach.services.smtp import FakeAdapter, SMTPAdapter
-from outreach.services.supabase import Supabase
+from outreach.streamlit_settings import load_settings
 
 
 def run():
+    page = st.navigation(
+        [
+            st.Page(outreach_page, title="Outreach", default=True),
+            st.Page(privacy_page, title="Privacy", url_path="privacy"),
+            st.Page(terms_page, title="Terms", url_path="terms"),
+        ]
+    )
+    page.run()
+
+
+def privacy_page():
+    st.markdown(legal.PRIVACY)
+
+
+def terms_page():
+    st.markdown(legal.TERMS)
+
+
+def outreach_page():
     st.title("Mass Outreach — invite-only")
-    page = st.sidebar.radio("Page", ("Outreach", "Privacy", "Terms"))
-    if page != "Outreach":
-        st.markdown(legal.PRIVACY if page == "Privacy" else legal.TERMS)
-        return
     try:
-        _workspace(Config.load())
+        _workspace(Config.load(load_settings()))
     except (ValueError, httpx.HTTPError) as exc:
         st.error(
             str(exc)
             if isinstance(exc, ValueError)
             else "Service unavailable; no further submission will be attempted"
         )
+        st.caption(
+            "Setup is incomplete or an operation was blocked. Access and sending remain restricted. Operators: see STREAMLIT_LAUNCH.md for Community Cloud secrets and backend checks."
+        )
 
 
 def _workspace(config):
-    with httpx.Client(timeout=20) as client:
-        store = Supabase(config, st.session_state.get("auth_token", ""), client=client)
-        _session(store, config)
+    store = get_api(config, st.session_state.get("auth_token", ""))
+    _session(store, config)
 
 
 def _session(store, config):
@@ -185,7 +203,7 @@ def _recovery(store, config):
                     store,
                     recovered,
                     selected["id"],
-                    FakeAdapter() if recovered.test_mode else SMTPAdapter(),
+                    FakeAdapter() if recovered.test_mode else SMTPAdapter(load_settings()),
                     ordinal,
                 )
                 st.rerun()
@@ -357,7 +375,7 @@ def _draft(store, config, email):
         "Submit next recipient" if not test_mode else "Simulate next recipient",
         disabled=not pending or submitting,
     ):
-        adapter = FakeAdapter() if test_mode else SMTPAdapter()
+        adapter = FakeAdapter() if test_mode else SMTPAdapter(load_settings())
         ordinal = next(r["ordinal"] for r in rows if r["state"] == "not_attempted")
         step(store, batch, active, adapter, ordinal)
         st.rerun()

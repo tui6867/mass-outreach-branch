@@ -9,6 +9,7 @@ from tests.test_auth_config_sql import ENV
 
 
 def test_ui_missing_configuration_fails_closed(monkeypatch):
+    monkeypatch.setattr(ui, "load_settings", lambda: {})
     for key in ENV:
         monkeypatch.delenv(key, raising=False)
     app = AppTest.from_string("from outreach.ui import run\nrun()", default_timeout=30)
@@ -19,8 +20,9 @@ def test_ui_missing_configuration_fails_closed(monkeypatch):
 
 
 def test_authenticated_ui_exact_review_uses_mock_only(monkeypatch):
+    monkeypatch.setattr(ui, "load_settings", lambda: {})
     config = Config.load(ENV)
-    monkeypatch.setattr(Config, "load", classmethod(lambda cls: config))
+    monkeypatch.setattr(Config, "load", classmethod(lambda cls, env=None: config))
     store = Mock()
     store.identity.return_value = SimpleNamespace(id="synthetic-uuid", email="user@example.com")
     store.access.return_value = {
@@ -31,7 +33,7 @@ def test_authenticated_ui_exact_review_uses_mock_only(monkeypatch):
     }
     store.suppression.return_value = set()
     store.action.return_value = []
-    monkeypatch.setattr(ui, "Supabase", lambda *_, **__: store)
+    monkeypatch.setattr(ui, "get_api", lambda *_, **__: store)
     app = AppTest.from_string("from outreach.ui import run\nrun()", default_timeout=30)
     app.session_state["auth_token"] = "synthetic-token"
     app.run()
@@ -57,10 +59,11 @@ def test_authenticated_ui_exact_review_uses_mock_only(monkeypatch):
 
 
 def test_login_uses_magic_link_mock_without_public_product_access(monkeypatch):
+    monkeypatch.setattr(ui, "load_settings", lambda: {})
     config = Config.load(ENV)
-    monkeypatch.setattr(Config, "load", classmethod(lambda cls: config))
+    monkeypatch.setattr(Config, "load", classmethod(lambda cls, env=None: config))
     store = Mock()
-    monkeypatch.setattr(ui, "Supabase", lambda *_, **__: store)
+    monkeypatch.setattr(ui, "get_api", lambda *_, **__: store)
     app = AppTest.from_string("from outreach.ui import run\nrun()", default_timeout=30)
     app.run()
     app.text_input[0].set_value("synthetic@example.com")

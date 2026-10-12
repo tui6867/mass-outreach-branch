@@ -1,4 +1,94 @@
-# Handoff status — October 11, 2026
+# Handoff status — October 12, 2026
+
+## Current session: Streamlit Community Cloud launch preparation
+
+- Re-read PROJECT_CONTEXT.md and this status, checked instructions, clean git
+  status, recent commits and remote. Current branch main, HEAD 61c2aa9; origin
+  https://github.com/tui6867/mass-outreach-branch.git. Prior implementation is now
+  tracked, unlike the October 11 baseline below. No user changes were discarded.
+- Owner chose Community Cloud and initially deployment together, then stated
+  built-in-browser sign-in is impossible. All account sign-in/deployment/setup
+  must be done in their regular browser. Owner explicitly requested **leave
+  changes local**: no commit, push, external migration or deployment performed.
+- Owner reports an existing project iaubupnvesznnxxerimx connected to GitHub.
+  First read-only check: outreach.users/settings/access RPC present. Owner then
+  reports full table/RPC checks match but sender/limits/admin setup is missing.
+  These are owner reports, not agent-executed database integration checks.
+- Supabase dashboard URL supplied is not a Streamlit app URL. Actual Cloud URL,
+  Auth redirects/email delivery, verified sender and verified administrator
+  configuration remain required.
+
+### Changes (launch scope only)
+- Consulted official Streamlit API/reference and Community Cloud dependency,
+  deployment, secrets and BaseConnection docs; confirmed uv.lock is supported
+  natively. No redundant requirements.txt or fictional deployment REST API added.
+- Added .streamlit/config.toml (CORS/XSRF, capped uploads, hidden error details,
+  theme) and safe typed .streamlit/secrets.toml.example with blank credentials
+  and real sends disabled. No real secrets files were created or inspected by
+  tools; credentials were not copied to source or printed.
+- Added Streamlit secrets/environment boundary with explicit overrides, typed
+  TOML conversion and allowlisted setting names. SMTP uses the same resolved
+  settings as the app. Added offline configuration-only preflight command.
+- Added official session-scoped st.connection/BaseConnection adapter, requiring
+  Streamlit 1.65+. Only HTTP transport is reused; JWT wrappers are fresh per run,
+  no tokens/default auth headers, protected results or authorization are cached.
+- Replaced radio routing with st.Page/st.navigation and stable legal-page routes.
+  Domain modules remain Streamlit/network-free; app.py stays composition only.
+- Added tests for TOML/env settings, factory session isolation, changing JWTs,
+  safe templates, offline preflight, read-only backend checks and guarded setup.
+- Added STREAMLIT_LAUNCH.md and updated readme.md/SETUP.md for the exact target,
+  host settings, manual backend/auth/admin setup and release gates.
+- Added supabase/launch_checks.sql (SELECT-only, no recipient/secret output) and
+  launch_setup.example.sql (operator-only, default guard prevents all writes).
+  Existing migrations were not edited or blindly reapplied to the reported schema.
+
+### Verification / remaining work
+- Final check commands used the isolated environment by prefixing each uv
+  command with `$env:UV_PROJECT_ENVIRONMENT = 'C:\Users\isaia\AppData\Local\Temp\opencode\mass-outreach-streamlit-20261012';`.
+  Results on Windows / Python 3.12.5:
+  - `uv sync --locked`: passed; 51 resolved, 49 installed packages checked.
+  - `uv run ruff format --check .`: passed; 37 Python files formatted.
+  - `uv run ruff check .`: passed; no violations.
+  - `uv run pytest`: **94 passed in 4.03s**.
+  - `uv run python -m compileall -q app.py outreach legal.py build_site.py`: passed.
+  - `uv run python build_site.py`: passed; both local legal pages written.
+  - `uv run python -m outreach.preflight --secrets-file .streamlit/secrets.toml.example`:
+    expected **BLOCKED, exit 1** because template credentials/sender are blank;
+    no live backend readiness is claimed.
+  - `git diff --check`: passed; only Windows LF/CRLF informational warnings.
+- Original .venv contains an inaccessible lib64 link from a different environment;
+  uv initially refused to replace it. Kept that environment rather than deleting
+  user work; used an isolated approved temporary uv environment for checks/server.
+- Local browser verified locked root page and desktop privacy/mobile terms routes.
+  No auth/outreach messages, real recipient data or external API tests used.
+- Fixed inherited empty sidebar color warnings by declaring explicit theme
+  colors; fresh page snapshots had no console problems. Stopped only the local
+  test server started in this session (PID 27348, port 8512); existing port 8501
+  was not touched. Hosted browser/deployment was not verified.
+- A factory-isolation test initially reused AppTest's literal test session ID;
+  corrected the harness to assign distinct synthetic session IDs, then verified
+  distinct transports and per-request JWTs. No production-session bypass added.
+- Still needed: owner push/deploy, actual Cloud URL, Supabase Auth custom SMTP
+  (default mail is team-only/rate-limited), confirmed admin UUID and sender domain,
+  operator-reviewed quota settings and Cloud secrets, hosted fake-mode checks,
+  actual DB authorization/concurrency verification and resolved legal/retention
+  placeholders before public service availability. Keep both real-send flags off.
+
+### Owner's next steps
+1. Review/commit/push local launch files yourself; deploy main/app.py/Python 3.12
+   in a regular browser and obtain the actual .streamlit.app root URL.
+2. Configure Supabase Site URL/redirect and auth mail/templates. Its default
+   mail service only supports project team addresses at a low rate, so custom
+   SMTP is needed before onboarding ordinary invitees.
+3. Verify project sender/provider/domain. Obtain a genuinely confirmed admin
+   Auth UUID; dashboard/GitHub login is not a project Auth user automatically.
+4. Review/fill the guarded launch_setup.example.sql privately and run it as
+   operator, keeping DB real sends off. Fill Cloud Secrets from the safe template
+   with matching caps/sender/app URL. Never share keys in chat or commit them.
+5. Repeat read-only launch checks and hosted fake-mode/auth/authorization checks.
+   See STREAMLIT_LAUNCH.md for the detailed walkthrough and remaining release gates.
+
+## Previous session record — October 11, 2026
 
 Branch: `main`. No commits made. Repository baseline and implementation files
 are untracked; git status does not provide an original tracked-file diff.
