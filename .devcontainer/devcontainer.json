@@ -2,6 +2,7 @@
   "name": "Mass Outreach Python 3.12",
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
   "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
+  
   "customizations": {
     "codespaces": {
       "openFiles": [
@@ -18,9 +19,7 @@
     }
   },
   "updateContentCommand": "python -m pip install uv && uv sync --locked",
-  "postAttachCommand": {
-    "server": "uv run --no-sync streamlit run app.py"
-  },
+  "postAttachCommand": "uv run --no-sync streamlit run app.py",
   "portsAttributes": {
     "8501": {
       "label": "Application",
